@@ -1,121 +1,151 @@
+import api from "@/configs/axios";
+import { authClient } from "@/lib/auth-client";
 import { Loader2Icon } from "lucide-react";
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 const Home = () => {
-  const [, setInput] = useState("");
+  const { data: session } = authClient.useSession();
+  const navigate = useNavigate();
+
+  const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
 
   const onSubmitHandler = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setLoading(true);
-    setTimeout(() => {
+    try {
+      if (!session?.user) {
+        return toast.error("Please Sign in to create a project");
+      } else if (!input.trim()) {
+        return toast.error("Please enter a message");
+      }
+      setLoading(true);
+      const { data } = await api.post("/user/project", {
+        initial_prompt: input,
+      });
       setLoading(false);
-    }, 3000);
+      navigate(`/projects/${data.projectId}`);
+    } catch (error: any) {
+      setLoading(false);
+      toast.error(error?.response?.data?.message || error.message);
+      console.log(error);
+    }
   };
 
   return (
-    <section className="flex flex-col items-center text-white text-sm pb-20 px-4 font-poppins">
-      <a
-        href="https://prebuiltui.com"
-        className="flex items-center gap-2 border border-slate-700 rounded-full p-1 pr-3 text-sm mt-20"
-      >
-        <span className="bg-indigo-600 text-xs px-3 py-1 rounded-full">
-          NEW
-        </span>
-        <p className="flex items-center gap-2">
-          <span>Try 30 days free trial option</span>
-          <svg
-            className="mt-px"
-            width="6"
-            height="9"
-            viewBox="0 0 6 9"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
+    <section className="relative overflow-hidden px-4 pb-24 pt-10 text-sm text-white md:px-8 lg:px-16">
+      <div className="app-glow left-1/2 top-8 h-72 w-72 -translate-x-1/2 rounded-full bg-indigo-500/30" />
+      <div className="app-glow right-8 top-24 h-64 w-64 rounded-full bg-cyan-500/20" />
+      <div className="soft-grid absolute inset-0 opacity-[0.06]" />
+
+      <div className="relative mx-auto flex max-w-7xl flex-col items-center">
+        <div className="glass-surface float-slow mt-12 flex items-center gap-2 rounded-full px-4 py-2 text-xs uppercase tracking-[0.28em] text-slate-200">
+          <span className="h-2 w-2 rounded-full bg-cyan-400" />
+          AI site builder
+        </div>
+
+        <div className="mt-10 max-w-4xl text-center">
+          <p className="mx-auto inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs text-slate-200">
+            <span className="h-2 w-2 rounded-full bg-indigo-400" />
+            Start creating websites instantly
+          </p>
+
+          <h1 className="mt-6 text-4xl font-semibold leading-tight text-white md:text-6xl md:leading-[1.05]">
+            Turn thoughts into websites with an AI workspace that keeps up with
+            the conversation.
+          </h1>
+
+          <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-slate-300 md:text-lg">
+            Create, refine, publish, and keep iterating on your site in one
+            flow. The builder remembers your changes, renders live previews,
+            and updates the design as you keep talking to it.
+          </p>
+        </div>
+
+        <div className="mt-12 grid w-full max-w-6xl gap-6 lg:grid-cols-[1.35fr_0.9fr]">
+          <form
+            onSubmit={onSubmitHandler}
+            className="glass-surface group rounded-3xl p-5 transition duration-300 hover:-translate-y-1 hover:border-white/20"
           >
-            <path
-              d="m1 1 4 3.5L1 8"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <p className="text-sm text-slate-400">Generate a new project</p>
+                <h2 className="text-xl font-medium text-white">
+                  Describe your idea
+                </h2>
+              </div>
+              <div className="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-xs text-cyan-200">
+                Prompt to site
+              </div>
+            </div>
+
+            <textarea
+              onChange={(e) => setInput(e.target.value)}
+              className="min-h-40 w-full resize-none rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-4 text-base text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-cyan-400/40 focus:ring-2 focus:ring-cyan-400/20"
+              rows={5}
+              placeholder="Example: Build a bold SaaS landing page for an AI scheduling tool with a glowing hero, pricing cards, testimonials, and a modern footer."
+              required
             />
-          </svg>
-        </p>
-      </a>
 
-      <h1 className="text-center text-[40px] leading-[48px] md:text-6xl md:leading-[70px] mt-4 font-semibold max-w-3xl">
-        Turn thoughts into websites instantly, with AI.
-      </h1>
+            <div className="mt-4 flex items-center justify-between gap-3">
+              <p className="text-xs text-slate-500">
+                Tip: mention style, sections, and the feeling you want.
+              </p>
+              <button className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-indigo-500 via-fuchsia-500 to-cyan-500 px-5 py-3 font-medium text-white shadow-lg shadow-indigo-500/20 transition hover:-translate-y-0.5 hover:shadow-indigo-500/30 active:scale-95">
+                {!loading ? (
+                  "Create with AI"
+                ) : (
+                  <>
+                    Creating <Loader2Icon className="size-4 animate-spin text-white" />
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
 
-      <p className="text-center text-base max-w-md mt-2">
-        Create, customize and publish websites faster than ever with our AI Site
-        Builder.
-      </p>
+          <div className="glass-surface rounded-3xl p-5">
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <p className="text-sm text-slate-400">Built for iteration</p>
+                <h3 className="text-xl font-medium text-white">
+                  Live editing loop
+                </h3>
+              </div>
+              <div className="rounded-full bg-white/5 px-3 py-1 text-xs text-slate-300">
+                Always in sync
+              </div>
+            </div>
 
-      <form
-        onSubmit={onSubmitHandler}
-        className="bg-white/10 max-w-2xl w-full rounded-xl p-4 mt-10 border border-indigo-600/70 focus-within:ring-2 ring-indigo-500 transition-all"
-      >
-        <textarea
-          onChange={(e) => setInput(e.target.value)}
-          className="bg-transparent outline-none text-gray-300 resize-none w-full"
-          rows={4}
-          placeholder="Describe your presentation in details"
-          required
-        />
-        <button className="ml-auto flex items-center gap-2 bg-gradient-to-r from-[#CB52D4] to-indigo-600 rounded-md px-4 py-2">
-          {!loading ? (
-            "Create with AI"
-          ) : (
-            <>
-              Creating{" "}
-              <Loader2Icon className="animate-spin size-4 text-white" />
-            </>
+            <div className="space-y-3">
+              {[
+                "1. Start from a natural-language prompt",
+                "2. Refine the site through chat revisions",
+                "3. Preview, save, roll back, and publish",
+              ].map((item, index) => (
+                <div
+                  key={item}
+                  className="flex items-center gap-3 rounded-2xl border border-white/8 bg-white/5 px-4 py-4 transition duration-300 hover:border-white/15 hover:bg-white/8"
+                  style={{ animationDelay: `${index * 120}ms` }}
+                >
+                  <span className="flex size-9 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-cyan-500 text-sm font-semibold text-white">
+                    0{index + 1}
+                  </span>
+                  <p className="text-sm text-slate-200">{item}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-16 flex flex-wrap items-center justify-center gap-8 text-slate-400">
+          {["Framer", "Huawei", "Instagram", "Microsoft", "Walmart"].map(
+            (brand) => (
+              <div key={brand} className="text-sm font-medium uppercase tracking-[0.24em] text-slate-500">
+                {brand}
+              </div>
+            ),
           )}
-        </button>
-      </form>
-
-      {/* Brand Section */}
-      <div className="flex flex-wrap items-center justify-center gap-12 md:gap-16 mx-auto mt-16 text-[#A0A0B0]">
-        {/* Framer */}
-        <div className="flex items-center gap-2">
-          <svg className="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 0L3 12h9v12l9-12h-9V0z" />
-          </svg>
-          <span className="text-xl font-semibold text-white">Framer</span>
-        </div>
-
-        {/* HUAWEI */}
-        <div className="flex items-center gap-2">
-          <svg className="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 1.63L3.89 22.37h2.24l1.5-4.04h6.74l1.5 4.04h2.24L12 1.63zm-2.02 14.28L12 5.37l2.02 10.54h-4.04z" />
-          </svg>
-          <span className="text-xl font-semibold text-white">HUAWEI</span>
-        </div>
-
-        {/* Instagram */}
-        <div className="flex items-center gap-2">
-          <svg className="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 2.163c3.204 0 3.584.012 4.85.07 1.17.054 1.803.245 2.226.41.56.218.96.478 1.383.9.423.423.683.823.9 1.383.165.423.356 1.056.41 2.226.058 1.266.07 1.646.07 4.85s-.012 3.584-.07 4.85c-.054 1.17-.245 1.803-.41 2.226-.218.56-.478.96-.9 1.383-.423.423-.823.683-1.383.9-.423.165-1.056.356-2.226.41-1.266.058-1.646.07-4.85.07s-3.584-.012-4.85-.07c-1.17-.054-1.803-.245-2.226-.41-.56-.218-.96-.478-1.383-.9-.423-.423-.683-.823-.9-1.383-.165-.423-.356-1.056-.41-2.226-.058-1.266-.07-1.646-.07-4.85s.012-3.584.07-4.85c.054-1.17.245-1.803.41-2.226.218-.56.478-.96.9-1.383.423-.423.823-.683 1.383-.9.423-.165 1.056-.356 2.226-.41 1.266-.058 1.646-.07 4.85-.07m0-2.163c-3.259 0-3.667.014-4.947.072-1.277.058-2.15.258-2.915.556-.787.305-1.455.714-2.122 1.382-.667.667-1.076 1.335-1.382 2.122-.298.765-.498 1.638-.556 2.915-.058 1.28-.072 1.688-.072 4.947s.014 3.667.072 4.947c.058 1.277.258 2.15.556 2.915.305.787.714 1.455 1.382 2.122.667.667 1.335 1.076 2.122 1.382.765.298 1.638.498 2.915.556 1.28.058 1.688.072 4.947.072s3.667-.014 4.947-.072c1.277-.058 2.15-.258 2.915-.556.787-.305 1.455-.714 2.122-1.382.667-.667 1.076-1.335 1.382-2.122.298-.765.498-1.638.556-2.915.058-1.28.072-1.688.072-4.947s-.014-3.667-.072-4.947c-.058-1.277-.258-2.15-.556-2.915-.305-.787-.714-1.455-1.382-2.122-.667-.667-1.335-1.076-2.122-1.382-.765-.298-1.638-.498-2.915-.556C15.667.014 15.259 0 12 0z" />
-            <path d="M12 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zm0 10.162a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.88 1.44 1.44 0 0 0 0-2.88z" />
-          </svg>
-          <span className="text-xl font-semibold text-white">Instagram</span>
-        </div>
-
-        {/* Microsoft */}
-        <div className="flex items-center gap-2">
-          <svg className="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M1 11.4h10.4V1H1v10.4zm11.6 0H23V1H12.6v10.4zM1 23h10.4V12.6H1V23zm11.6 0H23V12.6H12.6V23z" />
-          </svg>
-          <span className="text-xl font-semibold text-white">Microsoft</span>
-        </div>
-
-        {/* Walmart */}
-        <div className="flex items-center gap-2">
-          <svg className="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M20.25 10.25h-3.5v-3.5l-1.5 1.5-1.5-1.5v3.5h-3.5l1.5 1.5-1.5 1.5h3.5v3.5l1.5-1.5 1.5 1.5v-3.5h3.5l-1.5-1.5zM24 10.25h-3.5v3.5h3.5zm0-2h-3.5v-3.5h3.5zm-15.5 0h-3.5v-3.5h3.5zm0 5.5h-3.5v3.5h3.5z" />
-          </svg>
-          <span className="text-xl font-semibold text-white">Walmart</span>
         </div>
       </div>
     </section>

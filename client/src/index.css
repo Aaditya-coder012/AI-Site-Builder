@@ -1,13 +1,85 @@
 @import url("https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap");
 @import "tailwindcss";
+@import "@daveyplate/better-auth-ui/css";
 
+/* 1. Define variables at the root level */
+:root {
+  --background: hsl(0, 0%, 100%);
+  --foreground: hsl(0, 0%, 100%);
+  --primary: hsl(0, 0%, 100%);
+  --primary-foreground: hsl(0, 0%, 0%);
+  --destructive: hsl(0, 84%, 60%);
+  --destructive-foreground: hsl(0, 0%, 100%);
+}
+
+/* 2. Map variables to Tailwind utilities using @theme inline */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+}
+
+/* 3. Global Styles */
 * {
   font-family: "Outfit", sans-serif;
 }
 
 @layer base {
-  button {
-    @apply cursor-pointer;
+  body {
+    background:
+      radial-gradient(circle at top, rgba(79, 70, 229, 0.18), transparent 38%),
+      radial-gradient(circle at 20% 20%, rgba(14, 165, 233, 0.12), transparent 24%),
+      linear-gradient(180deg, #020617 0%, #020814 42%, #0f172a 100%);
+    color: var(--foreground);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
+::selection {
+  background: rgba(99, 102, 241, 0.35);
+  color: white;
+}
+
+.app-glow {
+  position: absolute;
+  inset: auto;
+  pointer-events: none;
+  filter: blur(80px);
+  opacity: 0.55;
+}
+
+.glass-surface {
+  background: rgba(15, 23, 42, 0.72);
+  backdrop-filter: blur(18px);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  box-shadow: 0 24px 80px rgba(15, 23, 42, 0.32);
+}
+
+.soft-grid {
+  background-image:
+    linear-gradient(rgba(148, 163, 184, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.08) 1px, transparent 1px);
+  background-size: 36px 36px;
+}
+
+.float-slow {
+  animation: floatSlow 10s ease-in-out infinite;
+}
+
+@keyframes floatSlow {
+  0%, 100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -12px, 0);
   }
 }
 
@@ -15,14 +87,34 @@
   display: none;
 }
 
-@keyframes fade-in {
-  0% {
-    opacity: 0;
-  }
-  100% {
-    opacity: 1;
-  }
+.no-scrollbar {
+  scrollbar-width: none;
 }
-.animate-fade-in {
-  animation: fade-in 0.8s ease-out;
+
+/* Force the Modal/Dialog to be deep black */
+[role="dialog"] {
+  background-color: #000000 !important; /* Pure black background */
+  color: #ffffff !important; /* White text for contrast */
+  border: 1px solid #333333 !important; /* Subtle dark grey border */
+  border-radius: 1rem !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Ensure the inputs inside the modal also match the black theme */
+[role="dialog"] input {
+  background-color: #1a1a1a !important; /* Dark grey for inputs */
+  border: 1px solid #333333 !important;
+  color: #ffffff !important;
+}
+
+/* Style the buttons */
+[role="dialog"] button:not(.bg-destructive) {
+  background-color: transparent !important;
+  border: 1px solid #444444 !important;
+  color: #ffffff !important;
+}
+
+/* Ensure placeholder text in inputs is visible */
+[role="dialog"] input::placeholder {
+  color: #888888 !important;
 }

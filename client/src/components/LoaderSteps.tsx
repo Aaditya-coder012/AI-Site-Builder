@@ -4,7 +4,7 @@ import {
   SquareIcon,
   TriangleIcon,
 } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 const steps = [
   { icon: ScanLineIcon, label: "Analyzing your request..." },
@@ -13,7 +13,7 @@ const steps = [
   { icon: CircleIcon, label: "Finalizing your website..." },
 ];
 
-const STEP_DURATION = 45000;
+const STEP_DURATION = 7000;
 const LoaderSteps = () => {
   const [Current, setCurrent] = useState(0);
   useEffect(() => {
@@ -25,25 +25,29 @@ const LoaderSteps = () => {
 
   const Icon = steps[Current].icon;
   return (
-    <div className="w-full h-full flex flex-col items-center justify-center bg-gray-950 relative overflow-hidden text-white">
-      <div className="absolute inset-0 bg-linear-to-br from-blue-500/10 via-purple-500/10 to-fuchsia-500/10 to-fuchisa-500/10 blur-3xl animate-pulse"></div>
+    <div className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-xl bg-slate-950 text-white">
+      <div className="absolute inset-0 soft-grid opacity-[0.04]" />
+      <div className="app-glow left-1/2 top-1/4 h-72 w-72 -translate-x-1/2 rounded-full bg-indigo-500/25" />
+      <div className="app-glow bottom-10 right-10 h-64 w-64 rounded-full bg-cyan-500/20" />
 
-      <div className="relative z-10 w-32 h-32 flex items-center justify-between">
-        <div className="absolute inset-0 rounded-full border border-indigo-400 animate-ping opacity-30" />
-        <div className="absolute inset-4 rounded-full border border-purple-400/20 " />
-        <Icon className="w-8 h-8 text-white opacity-80 animate-bounce" />
+      <div className="relative z-10 flex flex-col items-center text-center">
+        <div className="relative flex size-32 items-center justify-center">
+          <div className="absolute inset-0 rounded-full border border-indigo-400/30 animate-ping" />
+          <div className="absolute inset-4 rounded-full border border-white/10 bg-white/5 backdrop-blur" />
+          <Icon className="size-8 text-white opacity-90 animate-bounce" />
+        </div>
+
+        <p
+          key={Current}
+          className="mt-8 text-lg font-medium tracking-wide text-white transition-all duration-500"
+        >
+          {steps[Current].label}
+        </p>
+
+        <p className="mt-2 text-xs text-slate-400 transition-opacity duration-500">
+          This usually finishes in under a minute...
+        </p>
       </div>
-      {/*step label - fade using transition only(no invisible start)*/}
-      <p
-        key={Current}
-        className="mt-8 text-lg font-light text-white/90 tracking-wide transition-all duration-700 ease-in-out opacity-100"
-      >
-        {steps[Current].label}
-      </p>
-
-      <p className="text-xs text-gray-400 mt-2 transition-opacity duration-700 opacity-100">
-        This may take around 2-3 minutes...
-      </p>
     </div>
   );
 };

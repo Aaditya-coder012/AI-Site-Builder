@@ -10,10 +10,10 @@ export const appPlans = [
     name: "Basic",
     price: "$5",
     credits: 100,
-    description: "Start Now, scale up as you grow.",
+    description: "Start now and scale as you grow.",
     features: [
-      "Upto 20 Creations",
-      "Limited Revisions",
+      "Unlimited creations",
+      "Unlimited revisions",
       "Basic AI Models",
       "email support",
       "Basic analytics",
@@ -24,10 +24,10 @@ export const appPlans = [
     name: "Pro",
     price: "$19",
     credits: 400,
-    description: "Add credits to create more projects",
+    description: "Built for frequent builders who need more power.",
     features: [
-      "Upto 80 Creations",
-      "Extended Revisions",
+      "Unlimited creations",
+      "Unlimited revisions",
       "Advanced AI Models",
       "priority email support",
       "Advanced analytics",
@@ -38,10 +38,10 @@ export const appPlans = [
     name: "Enterprise",
     price: "$49",
     credits: 1000,
-    description: "Add credits to create more projects",
+    description: "For teams that need the full platform.",
     features: [
-      "Upto 200 Creations",
-      "Increased Revisions",
+      "Unlimited creations",
+      "Unlimited revisions",
       "Advanced AI Models",
       "email + chat support",
       "Advanced analytics",
@@ -430,6 +430,9 @@ export const iframeScript = `
                 tagName: selectedElement.tagName,
                 className: selectedElement.className,
                 text: selectedElement.innerText,
+                src: selectedElement.getAttribute('src') || '',
+                href: selectedElement.getAttribute('href') || '',
+                alt: selectedElement.getAttribute('alt') || '',
                 styles: {
                     padding: computedStyle.padding,
                     margin: computedStyle.margin,
@@ -451,6 +454,29 @@ export const iframeScript = `
 
                 if (updates.text !== undefined) {
                 selectedElement.innerText = updates.text;
+                }
+
+                if (updates.src !== undefined) {
+                selectedElement.setAttribute('src', updates.src);
+                }
+
+                if (updates.href !== undefined) {
+                const linkValue = updates.href || '';
+                if (selectedElement.tagName === 'A') {
+                    selectedElement.setAttribute('href', linkValue);
+                    selectedElement.setAttribute('target', '_blank');
+                    selectedElement.setAttribute('rel', 'noopener noreferrer');
+                } else {
+                    selectedElement.setAttribute('data-link', linkValue);
+                    selectedElement.onclick = linkValue ? function (e) {
+                    e.preventDefault();
+                    window.open(linkValue, '_blank', 'noopener,noreferrer');
+                    } : null;
+                }
+                }
+
+                if (updates.alt !== undefined) {
+                selectedElement.setAttribute('alt', updates.alt);
                 }
 
                 if (updates.styles) {

@@ -1,11 +1,14 @@
 import { X } from "lucide-react";
-import React, { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 interface EditorPanelProps {
   selectedElement: {
     tagName: string;
     className: string;
     text: string;
+    src?: string;
+    href?: string;
+    alt?: string;
     styles: {
       padding: string;
       margin: string;
@@ -23,139 +26,215 @@ const EditorPanel = ({
   onUpdate,
   onClose,
 }: EditorPanelProps) => {
-  const [Values, setValues] = useState(selectedElement);
+  const [values, setValues] = useState(selectedElement);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setValues(selectedElement);
   }, [selectedElement]);
 
-  if (!selectedElement || !Values) return null;
+  if (!selectedElement || !values) return null;
 
   const handleChange = (field: string, value: string) => {
-    const newValues = { ...Values, [field]: value };
-    if (field in Values.styles) {
-      newValues.styles = { ...Values.styles, [field]: value };
+    const newValues = { ...values, [field]: value };
+    if (field in values.styles) {
+      newValues.styles = { ...values.styles, [field]: value };
     }
     setValues(newValues);
     onUpdate({ [field]: value });
   };
 
   const handleStyleChange = (styleName: string, value: string) => {
-    const newStyles = { ...Values.styles, [styleName]: value };
-    setValues({ ...Values, styles: newStyles });
+    const newStyles = { ...values.styles, [styleName]: value };
+    setValues({ ...values, styles: newStyles });
     onUpdate({ styles: { [styleName]: value } });
   };
 
+  const handleAssetChange = (field: "src" | "href" | "alt", value: string) => {
+    const newValues = { ...values, [field]: value };
+    setValues(newValues);
+    onUpdate({ [field]: value });
+  };
+
+  const handleFileUpload = (file: File | null) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = typeof reader.result === "string" ? reader.result : "";
+      if (result) {
+        handleAssetChange("src", result);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const isImage = values.tagName === "IMG";
+  const isLinkable =
+    values.tagName === "A" || values.tagName === "BUTTON" || values.tagName === "SPAN";
+
   return (
-    <div
-      className="absolute top-4 right-4 w-80 bg-white rounded-lg shadow-xl 
-    border border-gray-200 p-4 z-50 animate-fade-in fade-in"
-    >
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="font-semibold text-gray-800">Edit Element</h3>
+    <div className="absolute right-4 top-4 z-50 w-80 rounded-3xl border border-white/10 bg-slate-950/95 p-4 text-white shadow-2xl shadow-black/40 backdrop-blur-xl animate-fade-in fade-in">
+      <div className="mb-4 flex items-center justify-between">
+        <h3 className="font-semibold text-white">Edit Element</h3>
         <button
           onClick={onClose}
-          className="p-1 hover:bg-gray-100 rounded-full"
+          className="rounded-full p-1 transition hover:bg-white/10"
         >
-          <X className="w-4 h-4 text-gray-500" />
+          <X className="h-4 w-4 text-slate-300" />
         </button>
       </div>
       <div className="space-y-4">
-        <div className="text-black">
-          <label className="block text-xs font-medium text-gray-500 mb-1">
+        <div>
+          <label className="mb-1 block text-xs font-medium text-slate-400">
             Text Content
           </label>
           <textarea
-            value={Values.text}
+            value={values.text}
             onChange={(e) => handleChange("text", e.target.value)}
-            className="w-full text-sm p-2 border border-gray-400 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none"
+            className="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-sm text-white outline-none focus:border-cyan-400/40 focus:ring-2 focus:ring-cyan-400/20"
           />
         </div>
+
+        {isImage && (
+          <div className="space-y-3">
+            <div>
+              <label className="mb-1 block text-xs font-medium text-slate-400">
+                Image URL
+              </label>
+              <input
+                type="text"
+                value={values.src || ""}
+                onChange={(e) => handleAssetChange("src", e.target.value)}
+                placeholder="Paste an image URL"
+                className="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-sm text-white outline-none focus:border-cyan-400/40 focus:ring-2 focus:ring-cyan-400/20"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-slate-400">
+                Upload Photo
+              </label>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={(e) => handleFileUpload(e.target.files?.[0] || null)}
+                className="block w-full text-xs text-slate-300 file:mr-3 file:rounded-full file:border-0 file:bg-gradient-to-r file:from-indigo-500 file:to-cyan-500 file:px-3 file:py-2 file:text-white hover:file:opacity-90"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-slate-400">
+                Alt Text
+              </label>
+              <input
+                type="text"
+                value={values.alt || ""}
+                onChange={(e) => handleAssetChange("alt", e.target.value)}
+                placeholder="Describe the image"
+                className="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-sm text-white outline-none focus:border-cyan-400/40 focus:ring-2 focus:ring-cyan-400/20"
+              />
+            </div>
+          </div>
+        )}
+
+        {isLinkable && (
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate-400">
+              Link URL
+            </label>
+            <input
+              type="text"
+              value={values.href || ""}
+              onChange={(e) => handleAssetChange("href", e.target.value)}
+              placeholder="Paste GitHub or live demo link"
+              className="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-sm text-white outline-none focus:border-cyan-400/40 focus:ring-2 focus:ring-cyan-400/20"
+            />
+          </div>
+        )}
         <div>
-          <label className="block text-xs font-medium text-gray-500 mb-1">
+          <label className="mb-1 block text-xs font-medium text-slate-400">
             Class Name
           </label>
           <input
             type="text"
-            value={Values.className || ""}
+            value={values.className || ""}
             onChange={(e) => handleChange("className", e.target.value)}
-            className="w-full text-sm text-black p-2 border border-gray-400 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none"
+            className="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-sm text-white outline-none focus:border-cyan-400/40 focus:ring-2 focus:ring-cyan-400/20"
           />
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">
+            <label className="mb-1 block text-xs font-medium text-slate-400">
               Padding
             </label>
             <input
               type="text"
-              value={Values.styles.padding}
+              value={values.styles.padding}
               onChange={(e) => handleStyleChange("padding", e.target.value)}
-              className="w-full text-sm text-black p-2 border border-gray-400 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none"
+              className="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-sm text-white outline-none focus:border-cyan-400/40 focus:ring-2 focus:ring-cyan-400/20"
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">
+            <label className="mb-1 block text-xs font-medium text-slate-400">
               Margin
             </label>
             <input
               type="text"
-              value={Values.styles.margin}
+              value={values.styles.margin}
               onChange={(e) => handleStyleChange("margin", e.target.value)}
-              className="w-full text-sm text-black p-2 border border-gray-400 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none"
+              className="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-sm text-white outline-none focus:border-cyan-400/40 focus:ring-2 focus:ring-cyan-400/20"
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-gray-500 mb-1">
+          <label className="mb-1 block text-xs font-medium text-slate-400">
             Font Size
           </label>
           <input
             type="text"
-            value={Values.styles.fontSize}
+            value={values.styles.fontSize}
             onChange={(e) => handleStyleChange("fontSize", e.target.value)}
-            className="w-full text-sm text-black p-2 border border-gray-400 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none"
+            className="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-sm text-white outline-none focus:border-cyan-400/40 focus:ring-2 focus:ring-cyan-400/20"
           />
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">
+            <label className="mb-1 block text-xs font-medium text-slate-400">
               Background
             </label>
-            <div className="flex items-center gap-2 border border-gray-400 rounded-md p-1">
+            <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 p-2">
               <input
                 type="color"
                 value={
-                  Values.styles.backgroundColor === "rgba(0,0,0,0)"
+                  values.styles.backgroundColor === "rgba(0,0,0,0)"
                     ? "#ffffff"
-                    : Values.styles.backgroundColor
+                    : values.styles.backgroundColor
                 }
                 onChange={(e) =>
                   handleStyleChange("backgroundColor", e.target.value)
                 }
-                className="w-6 h-6 cursor-pointer"
+                className="h-7 w-7 cursor-pointer rounded-full border border-white/10 bg-transparent"
               />
-              <span className="text-xs text-gray-600 truncate">
-                {Values.styles.backgroundColor}
+              <span className="truncate text-xs text-slate-300">
+                {values.styles.backgroundColor}
               </span>
             </div>
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">
+            <label className="mb-1 block text-xs font-medium text-slate-400">
               Text Color
             </label>
-            <div className="flex items-center gap-2 border border-gray-400 rounded-md p-1">
+            <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 p-2">
               <input
                 type="color"
-                value={Values.styles.color}
+                value={values.styles.color}
                 onChange={(e) => handleStyleChange("color", e.target.value)}
-                className="w-6 h-6 cursor-pointer"
+                className="h-7 w-7 cursor-pointer rounded-full border border-white/10 bg-transparent"
               />
-              <span className="text-xs text-gray-600 truncate">
-                {Values.styles.color}
+              <span className="truncate text-xs text-slate-300">
+                {values.styles.color}
               </span>
             </div>
           </div>

@@ -2,20 +2,35 @@ import { useEffect, useState } from "react";
 import type { Project } from "../types";
 import { Loader2Icon } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { dummyProjects } from "../assets/assets";
 import Footer from "../components/Footer";
+import api from "@/configs/axios";
+import { toast } from "sonner";
+import { dummyProjects } from "../assets/assets";
 
 const Community = () => {
   const [loading, setLoading] = useState(true);
   const [projects, setProjects] = useState<Project[]>([]);
   const navigate = useNavigate();
 
+  const mergeProjects = (items: Project[]) => {
+    const combined = [...dummyProjects, ...items];
+    return combined.filter(
+      (project, index, list) =>
+        list.findIndex((item) => item.id === project.id) === index,
+    );
+  };
+
   const fetchProjects = async () => {
-    setProjects(dummyProjects);
-    //simulate loading
-    setTimeout(() => {
+    try {
+      const { data } = await api.post("/project/published");
+      setProjects(mergeProjects(data.projects || []));
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || error.message);
+      console.log(error);
+      setProjects(dummyProjects);
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   useEffect(() => {
@@ -24,10 +39,12 @@ const Community = () => {
 
   return (
     <>
-      <div className="px-4 md:px-16 lg:px-24 xl:px-32">
+      <div className="relative px-4 md:px-16 lg:px-24 xl:px-32">
+        <div className="app-glow left-0 top-10 h-64 w-64 rounded-full bg-indigo-500/15" />
+        <div className="app-glow right-0 top-28 h-64 w-64 rounded-full bg-cyan-500/10" />
         {loading ? (
           <div className="flex items-center justify-center h-[80vh]">
-            <Loader2Icon className="spin-7 animate-spin text-indigo-200" />
+            <Loader2Icon className="size-8 animate-spin text-indigo-200" />
           </div>
         ) : projects.length > 0 ? (
           <div className="py-10 min-h-[80vh]">
@@ -37,16 +54,16 @@ const Community = () => {
               </h1>
             </div>
 
-            <div className="flex flex-wrap gap-3.5">
+            <div className="flex flex-wrap gap-4">
               {projects.map((project) => (
                 <Link
                   key={project.id}
                   to={`/view/${project.id}`}
                   target="_blank"
-                  className="w-72 max-sm:mx-auto cursor-pointer bg-gray-900/6 border border-gray-700 rounded-lg overflow-hidden group hover:border-indigo-800/80 transition-all duration-300"
+                  className="group w-72 overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-lg shadow-black/20 transition duration-300 hover:-translate-y-1 hover:border-cyan-400/30 hover:bg-white/8 max-sm:mx-auto"
                 >
                   {/*Desktop like mini preview*/}
-                  <div className="relative w-full h-40 bg-gray-900 overflow-hidden border-b border-gray-800">
+                  <div className="relative h-40 w-full overflow-hidden border-b border-white/5 bg-slate-950">
                     {project.current_code ? (
                       <iframe
                         srcDoc={project.current_code}
@@ -55,18 +72,18 @@ const Community = () => {
                         style={{ transform: "scale(0.24)" }}
                       />
                     ) : (
-                      <div className="flex items-center justify-center h-full text-gray-500">
+                      <div className="flex h-full items-center justify-center text-gray-500">
                         <p>No Preview</p>
                       </div>
                     )}
                   </div>
                   {/*content*/}
-                  <div className="p-4 text-white bg-linear-180 from-transparent group-hover:from-indigo-950 to-transparent transition-colors">
+                  <div className="bg-gradient-to-t from-slate-950 via-slate-950/90 to-transparent p-4 text-white transition-colors group-hover:from-indigo-950/50">
                     <div className="flex items-center justify-between">
                       <h2 className="text-lg font-medium line-clamp-2">
                         {project.name}
                       </h2>
-                      <button className="px-2.5 py-0.5 mt-1 ml-2 text-xs bg-gray-800 border border-gray-700 rounded-full">
+                      <button className="ml-2 mt-1 rounded-full border border-white/10 bg-white/5 px-2.5 py-0.5 text-xs">
                         Website
                       </button>
                     </div>
@@ -79,8 +96,8 @@ const Community = () => {
                         {new Date(project.createdAt).toLocaleDateString()}
                       </span>
                       <div className="flex gap-3 text-white text-sm">
-                        <button className="px-3 py-1.5 bg-white/10 hover:bg-white/15 rounded-md transition-colors flex items-center gap-2">
-                          <span className="bg-gray-800 size-4.5 rounded-full text-black font-semibold flex items-center justify-center">
+                        <button className="flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 transition hover:bg-white/15">
+                          <span className="flex size-4.5 items-center justify-center rounded-full bg-slate-800 font-semibold text-black">
                             {project.user?.name?.slice(0, 1)}
                           </span>
                           {project.user?.name}
