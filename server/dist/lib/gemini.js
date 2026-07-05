@@ -1,5 +1,4 @@
 import { GoogleGenAI } from "@google/genai";
-import { createOpenRouterClient } from "../configs/openai.js";
 const geminiApiKey = process.env.GEMINI_API_KEY || process.env.AI_API_KEY || "";
 export const geminiModels = [
     "gemini-2.5-flash",
@@ -7,7 +6,6 @@ export const geminiModels = [
     "gemini-2.5-pro",
 ];
 export const ai = new GoogleGenAI({ apiKey: geminiApiKey });
-const openRouterModel = process.env.OPENROUTER_MODEL || "openai/gpt-4o-mini";
 const getErrorMessage = (error) => error instanceof Error ? error.message : String(error?.message || error);
 const getErrorStatus = (error) => {
     const rawStatus = error?.status ?? error?.code;
@@ -29,36 +27,6 @@ const isRetryableError = (error) => {
         message.includes("temporarily"));
 };
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-const normalizeContentParts = (parts) => parts
-    .map((part) => (typeof part?.text === "string" ? part.text : ""))
-    .join("")
-    .trim();
-const toOpenRouterMessages = (contents) => (Array.isArray(contents) ? contents : []).flatMap((entry) => {
-    const text = normalizeContentParts(entry?.parts || []);
-    if (!text) {
-        return [];
-    }
-    return [
-        {
-            role: entry?.role === "assistant" ? "assistant" : "user",
-            content: text,
-        },
-    ];
-});
-const generateContentWithOpenRouter = async (contents) => {
-    const messages = toOpenRouterMessages(contents);
-    if (messages.length === 0) {
-        throw new Error("No prompt content was provided for fallback generation.");
-    }
-    const openai = createOpenRouterClient();
-    const response = await openai.chat.completions.create({
-        model: openRouterModel,
-        messages,
-        temperature: 0.7,
-    });
-    const text = response.choices[0]?.message?.content;
-    return { text: typeof text === "string" ? text : "" };
-};
 const getRetryableErrorMessage = (error) => {
     const status = getErrorStatus(error);
     if (status === 429) {
@@ -103,15 +71,9 @@ export const generateContentWithFallback = async (contents) => {
         }
     }
     if (lastRetryableError) {
-        try {
-            return await generateContentWithOpenRouter(contents);
-        }
-        catch (fallbackError) {
-            if (fallbackError instanceof Error) {
-                throw fallbackError;
-            }
-            throw new Error(getRetryableErrorMessage(lastRetryableError));
-        }
+        throw new Error(getRetryableErrorMessage(lastRetryableError));
     }
-    throw lastError instanceof Error ? lastError : new Error("Unable to generate content.");
+    throw lastError instanceof Error
+        ? lastError
+        : new Error("Unable to generate content.");
 };
