@@ -77,12 +77,12 @@ const Myprojects = () => {
               </button>
             </div>
 
-            <div className="flex flex-wrap gap-4">
+            <div className="flex flex-wrap items-start gap-4">
               {projects.map((project) => (
                 <div
                   onClick={() => navigate(`/preview/${project.id}`)}
                   key={project.id}
-                  className="group relative w-72 cursor-pointer overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-lg shadow-black/20 transition duration-300 hover:-translate-y-1 hover:border-cyan-400/30 hover:bg-white/8 max-sm:mx-auto"
+                  className="group relative h-fit w-72 self-start cursor-pointer overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-lg shadow-black/20 transition duration-300 hover:-translate-y-1 hover:border-cyan-400/30 hover:bg-white/8 max-sm:mx-auto"
                 >
                   <div className="relative h-40 w-full overflow-hidden border-b border-white/5 bg-slate-950">
                     {project.current_code ? (

@@ -54,13 +54,13 @@ const Community = () => {
               </h1>
             </div>
 
-            <div className="flex flex-wrap gap-4">
+            <div className="flex flex-wrap items-start gap-4">
               {projects.map((project) => (
                 <Link
                   key={project.id}
                   to={`/view/${project.id}`}
                   target="_blank"
-                  className="group w-72 overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-lg shadow-black/20 transition duration-300 hover:-translate-y-1 hover:border-cyan-400/30 hover:bg-white/8 max-sm:mx-auto"
+                  className="group h-fit w-72 self-start overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-lg shadow-black/20 transition duration-300 hover:-translate-y-1 hover:border-cyan-400/30 hover:bg-white/8 max-sm:mx-auto"
                 >
                   {/*Desktop like mini preview*/}
                   <div className="relative h-40 w-full overflow-hidden border-b border-white/5 bg-slate-950">

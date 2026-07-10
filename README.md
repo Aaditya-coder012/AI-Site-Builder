@@ -420,6 +420,57 @@ npm run build
 
 ---
 
+## Production Deployment
+
+### Recommended setup
+
+Deploy this as two services:
+
+1. `client/` on Vercel.
+2. `server/` on a Node host such as Render, Railway, or Fly.io.
+
+That fits the current codebase best because the frontend is a Vite SPA and the backend is a long-running Express + Prisma server.
+
+### Frontend on Vercel
+
+Use `client/` as the Vercel project root.
+
+If your API is hosted separately, set:
+
+- `VITE_API_BASEURL=https://your-api-domain.com/api`
+- `VITE_AUTH_BASEURL=https://your-api-domain.com/api/auth`
+
+The client includes a Vercel rewrite so React Router refreshes work correctly.
+
+### Backend on a Node host
+
+Set these server environment variables:
+
+- `DATABASE_URL`
+- `BETTER_AUTH_SECRET`
+- `BETTER_AUTH_URL`
+- `TRUSTED_ORIGINS`
+- `GEMINI_API_KEY` or `AI_API_KEY`
+- `NODE_ENV=production`
+
+Example values:
+
+- `BETTER_AUTH_URL=https://your-api-domain.com/api/auth`
+- `TRUSTED_ORIGINS=https://your-vercel-app.vercel.app`
+
+### Production checklist
+
+1. Run `npm run build` in both `client/` and `server/`.
+2. Make sure the database is reachable and migrated.
+3. Confirm your frontend domain is listed in `TRUSTED_ORIGINS`.
+4. Verify sign-in, project creation, revisions, and publishing over HTTPS.
+
+### One-project deployment
+
+If you want everything on one Vercel project, the backend would need to be refactored into serverless/API routes. That is a bigger change than a normal deploy, so the current codebase should be deployed as two services.
+
+---
+
 ## Notes On Existing Dummy Data
 
 The app includes `dummyProjects` for local fallback/demo behavior. These are used when API calls fail or when a sample preview is needed without live backend data.
