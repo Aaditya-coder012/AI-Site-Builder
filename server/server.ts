@@ -1,5 +1,5 @@
 import "dotenv/config";
-import express, { Request, Response } from "express";
+import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import { toNodeHandler } from "better-auth/node";
 import { auth } from "./lib/auth.js";
@@ -32,12 +32,11 @@ const corsOptions = {
       callback(null, true);
       return;
     }
-
-    if (trustedOrigins.includes(origin)) {
+    const normalized = normalizeOrigin(origin);
+    if (trustedOrigins.includes(normalized)) {
       callback(null, true);
       return;
     }
-
     const isLocalhostOrigin =
       /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
     callback(null, isLocalhostOrigin);
@@ -45,13 +44,44 @@ const corsOptions = {
   credentials: true,
 };
 
+// Apply CORS globally
 app.use(cors(corsOptions));
+
+// Better Auth's toNodeHandler handles requests at a low level and bypasses
+// Express middleware for auth routes. We must explicitly handle OPTIONS preflight
+// AND manually inject CORS headers before handing off to Better Auth.
+app.options("/api/auth/*splat", cors(corsOptions));
+
+app.use("/api/auth", (req: Request, res: Response, next: NextFunction) => {
+  const origin = req.headers.origin as string | undefined;
+  if (origin) {
+    const normalized = normalizeOrigin(origin);
+    if (
+      trustedOrigins.includes(normalized) ||
+      /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)
+    ) {
+      res.setHeader("Access-Control-Allow-Origin", origin);
+      res.setHeader("Access-Control-Allow-Credentials", "true");
+      res.setHeader(
+        "Access-Control-Allow-Headers",
+        "Content-Type, Authorization, Cookie, Set-Cookie",
+      );
+      res.setHeader(
+        "Access-Control-Allow-Methods",
+        "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+      );
+    }
+  }
+  if (req.method === "OPTIONS") {
+    res.sendStatus(204);
+    return;
+  }
+  next();
+});
 
 app.all("/api/auth/{*any}", toNodeHandler(auth));
 
 app.use(express.json({ limit: "50mb" }));
-
-app.use(express.json());
 
 app.get("/", (req: Request, res: Response) => {
   res.send("Server is Live!");
