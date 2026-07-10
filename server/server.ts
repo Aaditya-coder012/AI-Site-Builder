@@ -20,7 +20,7 @@ const trustedOrigins = [
   "http://127.0.0.1:5173",
   "http://localhost:3000",
   "http://127.0.0.1:3000",
-  "https://ai-site-builder-snowy.vercel.app/",
+  "https://ai-site-builder-snowy.vercel.app",
 ].filter((origin, index, all) => all.indexOf(origin) === index);
 
 const corsOptions = {

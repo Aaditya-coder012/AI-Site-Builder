@@ -5,13 +5,23 @@ import prisma from "./prisma.js";
 
 const normalizeOrigin = (origin: string) => origin.trim().replace(/\/$/, "");
 
+// TRUSTED_ORIGINS env var should be a comma-separated list of allowed frontend URLs
+// e.g. TRUSTED_ORIGINS=https://ai-site-builder-snowy.vercel.app
 const trustedOrigins = [
   ...(process.env.TRUSTED_ORIGINS?.split(",").map(normalizeOrigin).filter(Boolean) || []),
   "http://localhost:5173",
   "http://127.0.0.1:5173",
   "http://localhost:3000",
   "http://127.0.0.1:3000",
+  "https://ai-site-builder-snowy.vercel.app",
 ].filter((origin, index, all) => all.indexOf(origin) === index);
+
+// BETTER_AUTH_URL must be the full backend server URL, e.g.:
+// https://ai-site-builder-zegh.onrender.com
+// Do NOT include /api/auth in this value
+const baseURL =
+  process.env.BETTER_AUTH_URL?.replace(/\/api\/auth\/?$/, "") ||
+  "http://localhost:3000";
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {
@@ -24,7 +34,7 @@ export const auth = betterAuth({
     deleteUser: { enabled: true },
   },
   trustedOrigins,
-  baseURL: process.env.BETTER_AUTH_URL!,
+  baseURL,
   secret: process.env.BETTER_AUTH_SECRET!,
   advanced: {
     cookies: {
