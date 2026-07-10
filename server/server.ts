@@ -13,15 +13,21 @@ const port = process.env.PORT || 3000;
 const normalizeOrigin = (origin: string) => origin.trim().replace(/\/$/, "");
 
 const trustedOrigins = [
-  ...(process.env.TRUSTED_ORIGINS?.split(",").map(normalizeOrigin).filter(Boolean) || []),
+  ...(process.env.TRUSTED_ORIGINS?.split(",")
+    .map(normalizeOrigin)
+    .filter(Boolean) || []),
   "http://localhost:5173",
   "http://127.0.0.1:5173",
   "http://localhost:3000",
   "http://127.0.0.1:3000",
+  "https://ai-site-builder-snowy.vercel.app/",
 ].filter((origin, index, all) => all.indexOf(origin) === index);
 
 const corsOptions = {
-  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+  origin: (
+    origin: string | undefined,
+    callback: (err: Error | null, allow?: boolean) => void,
+  ) => {
     if (!origin) {
       callback(null, true);
       return;
@@ -32,7 +38,8 @@ const corsOptions = {
       return;
     }
 
-    const isLocalhostOrigin = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
+    const isLocalhostOrigin =
+      /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
     callback(null, isLocalhostOrigin);
   },
   credentials: true,
