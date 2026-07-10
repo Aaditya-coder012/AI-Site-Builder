@@ -5,18 +5,22 @@ import prisma from "./prisma.js";
 
 const normalizeOrigin = (origin: string) => origin.trim().replace(/\/$/, "");
 
-// TRUSTED_ORIGINS env var: comma-separated list of extra allowed frontend URLs
-// e.g. TRUSTED_ORIGINS=https://ai-site-builder-snowy.vercel.app
-const extraOrigins = (process.env.TRUSTED_ORIGINS?.split(",")
-  .map(normalizeOrigin)
-  .filter(Boolean) || []);
+// Patterns that are always trusted regardless of the static list
+const TRUSTED_PATTERNS: RegExp[] = [
+  /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/,
+  // All Vercel preview deployments for this project
+  /^https:\/\/ai-site-builder[a-z0-9-]*\.vercel\.app$/,
+];
 
-// Better Auth trustedOrigins — list ALL known origins.
-// Vercel creates a unique preview URL per deployment; we include the stable
-// production URL here. All dynamic preview URLs are handled by the Express
-// CORS middleware layer before this runs.
-const trustedOrigins = [
-  ...extraOrigins,
+function matchesTrustedPattern(origin: string): boolean {
+  const normalized = normalizeOrigin(origin);
+  return TRUSTED_PATTERNS.some((p) => p.test(normalized));
+}
+
+const staticTrustedOrigins: string[] = [
+  ...(process.env.TRUSTED_ORIGINS?.split(",")
+    .map(normalizeOrigin)
+    .filter(Boolean) || []),
   "http://localhost:5173",
   "http://127.0.0.1:5173",
   "http://localhost:3000",
@@ -24,9 +28,22 @@ const trustedOrigins = [
   "https://ai-site-builder-snowy.vercel.app",
 ].filter((o, i, a) => a.indexOf(o) === i);
 
-// BETTER_AUTH_URL: full backend server URL, e.g.:
+// Better Auth calls `trustedOrigins.includes(origin)` internally.
+// Proxy the array so that call also checks our regex patterns, allowing
+// Vercel preview URLs (which change every deployment) to pass through.
+const trustedOrigins = new Proxy(staticTrustedOrigins, {
+  get(target, prop, receiver) {
+    if (prop === "includes") {
+      return (searchElement: string) =>
+        target.includes(searchElement) || matchesTrustedPattern(searchElement);
+    }
+    return Reflect.get(target, prop, receiver);
+  },
+}) as string[];
+
+// BETTER_AUTH_URL: full backend server URL only, e.g.:
 //   https://ai-site-builder-zegh.onrender.com
-// Do NOT append /api/auth — Better Auth adds that itself.
+// Do NOT append /api/auth.
 const baseURL =
   process.env.BETTER_AUTH_URL?.replace(/\/api\/auth\/?$/, "") ||
   "http://localhost:3000";
