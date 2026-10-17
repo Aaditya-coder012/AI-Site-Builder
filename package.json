@@ -1,0 +1,30 @@
+{
+  "name": "ai-site-builder",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "dev": "tsx server/server.ts",
+    "build": "npm run build --workspace=client",
+    "lint": "npm run lint --workspace=client",
+    "start": "NODE_ENV=production tsx server/server.ts"
+  },
+  "dependencies": {
+    "@google/genai": "^2.30.0",
+    "@types/cors": "^2.8.19",
+    "better-auth": "^1.7.10",
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.8",
+    "express": "^5.2.1",
+    "mongoose": "^9.11.2",
+    "vite": "^8.0.12"
+  },
+  "devDependencies": {
+    "@types/node": "^24.12.3",
+    "tsx": "^4.22.4"
+  }
+}

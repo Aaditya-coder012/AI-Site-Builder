@@ -4,11 +4,11 @@ const geminiApiKey = process.env.GEMINI_API_KEY || process.env.AI_API_KEY || "";
 
 export const geminiModels = [
   "gemini-2.5-flash",
-  "gemini-2.5-flash-lite",
-  "gemini-2.5-pro",
+  "gemini-3.8-flash",
+  "gemini-4-argon",
 ] as const;
 
-export const ai = new GoogleGenAI({ apiKey: geminiApiKey });
+export const ai = new GoogleGenAI(geminiApiKey ? { apiKey: geminiApiKey } : {});
 
 const getErrorMessage = (error: unknown) =>
   error instanceof Error ? error.message : String((error as any)?.message || error);

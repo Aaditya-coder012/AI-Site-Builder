@@ -1,0 +1,7 @@
+{
+  "name": "AI Site Builder",
+  "description": "AI-powered website builder that creates, edits, and previews responsive websites with custom styling and live preview.",
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
